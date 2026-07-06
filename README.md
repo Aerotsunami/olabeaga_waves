@@ -37,7 +37,3 @@ python -m http.server 8000
 ```
 
 После этого открыть `http://localhost:8000`.
-
-## Публикация
-
-Сайт публикуется через GitHub Pages из ветки `main`.
