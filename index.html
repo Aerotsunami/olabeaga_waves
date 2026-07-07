@@ -78,11 +78,34 @@
   .dyn .t{font-size:10px;color:var(--muted);margin-top:3px}
   .pos{color:var(--teal-bright)} .neg{color:var(--pink)}
 
+  /* ── луна и солнце ── */
+  .astro{display:flex;align-items:center;gap:14px;margin-top:10px}
+  .moon-emoji{font-size:44px;line-height:1;filter:drop-shadow(0 0 14px rgba(249,168,212,.5))}
+  .astro .info{flex:1}
+  .astro .phase{font-size:15px;font-weight:700}
+  .astro .illum{font-size:11px;color:var(--muted);margin-top:2px}
+  .astro .cycle{font-size:11px;color:var(--pink-soft);margin-top:2px}
+  .tide-mode{margin-top:10px;font-size:11.5px;border-radius:12px;padding:8px 10px;text-align:center;line-height:1.45;
+     background:rgba(64,224,208,.10);border:1px solid rgba(64,224,208,.3);color:var(--teal-bright)}
+  .tide-mode.neap{background:rgba(167,139,250,.10);border-color:rgba(167,139,250,.35);color:var(--purple)}
+  .sun-row{display:flex;gap:10px;margin-top:10px}
+  .sun{flex:1;display:flex;align-items:center;gap:8px;background:rgba(22,10,40,.45);
+       border-radius:14px;padding:9px 12px;border:1px solid rgba(167,139,250,.18);font-size:13px;font-weight:600}
+  .sun .t2{font-size:10px;color:var(--muted);font-weight:400}
+
+  /* ── переключатель периода ── */
+  .range{display:flex;gap:6px;margin:10px 0 4px}
+  .range button{flex:1;background:rgba(22,10,40,.45);border:1px solid rgba(167,139,250,.25);color:var(--muted);
+     padding:6px 0;border-radius:12px;font-size:12px;font-weight:600}
+  .range button.act{background:linear-gradient(90deg,rgba(124,58,237,.6),rgba(255,110,199,.5));
+     color:#fff;border-color:var(--card-border)}
+
   /* ── график ── */
   #chart{width:100%;height:190px;display:block;touch-action:pan-y}
   .legend{display:flex;gap:14px;font-size:10.5px;color:var(--muted);margin-top:8px;justify-content:center}
   .legend span::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
   .lg-past::before{background:var(--purple)} .lg-fut::before{background:var(--teal)} .lg-now::before{background:var(--pink)}
+  .lg-night::before{background:#241436;border:1px solid rgba(167,139,250,.4);border-radius:2px!important}
 
   /* ── события ── */
   .events{display:flex;flex-direction:column;gap:9px;margin-top:10px}
@@ -156,12 +179,36 @@
   </div>
 </div>
 
+<!-- Луна и Солнце -->
+<div class="card">
+  <div class="label">Луна и солнце</div>
+  <div class="astro">
+    <div class="moon-emoji" id="moon-emoji">🌙</div>
+    <div class="info">
+      <div class="phase" id="moon-phase">—</div>
+      <div class="illum" id="moon-illum"></div>
+      <div class="cycle" id="moon-cycle"></div>
+    </div>
+  </div>
+  <div class="tide-mode" id="tide-mode"></div>
+  <div class="sun-row">
+    <div class="sun"><span style="font-size:20px">🌅</span><div><div id="sunrise">—</div><div class="t2">восход</div></div></div>
+    <div class="sun"><span style="font-size:20px">🌇</span><div><div id="sunset">—</div><div class="t2">закат</div></div></div>
+  </div>
+</div>
+
 <!-- График -->
 <div class="card">
-  <div class="label">Уровень: сутки назад → 2 дня вперёд</div>
+  <div class="label" id="chart-title">Уровень воды</div>
+  <div class="range" id="range">
+    <button data-r="24ч">24 ч</button>
+    <button data-r="3д">3 дня</button>
+    <button data-r="5д">5 дней</button>
+    <button data-r="7д">7 дней</button>
+  </div>
   <canvas id="chart"></canvas>
   <div class="legend">
-    <span class="lg-past">прошедшее</span><span class="lg-fut">прогноз</span><span class="lg-now">сейчас</span>
+    <span class="lg-past">прошедшее</span><span class="lg-fut">прогноз</span><span class="lg-now">сейчас</span><span class="lg-night">ночь</span>
   </div>
 </div>
 
@@ -178,7 +225,11 @@
 'use strict';
 const LAT=43.271, LON=-2.962, TZ='Europe/Madrid';
 const API=`https://marine-api.open-meteo.com/v1/marine?latitude=${LAT}&longitude=${LON}&hourly=sea_level_height_msl&timezone=${encodeURIComponent(TZ)}&past_days=7&forecast_days=7`;
-let S={times:[],h:[],fetchedAt:0};
+let S={times:[],h:[],fetchedAt:0};   // полный массив данных
+let V={times:[],h:[]};               // видимое окно (по выбранному периоду)
+let RANGE='3д';
+const RANGES={'24ч':{p:6,f:18},'3д':{p:18,f:54},'5д':{p:24,f:96},'7д':{p:24,f:144}};
+const RANGE_LABEL={'24ч':'сутки','3д':'3 дня','5д':'5 дней','7д':'7 дней'};
 
 /* ---- гармоническая модель (офлайн-фолбэк) ----
    после удачной загрузки приложение само подгоняет
@@ -241,7 +292,7 @@ function bilbaoStamp(d){
 function syntheticFromModel(model){
   const times=[],h=[];
   const start=Date.now()-24*3600e3;
-  for(let k=0;k<=96;k++){
+  for(let k=0;k<=216;k++){
     const ms=start+k*3600e3;
     const stamp=bilbaoStamp(new Date(ms));
     times.push(stamp);
@@ -264,12 +315,21 @@ function nowIndexOf(times){
   return i<0 ? -1 : i + n.m/60;
 }
 function nowIndex(){ return nowIndexOf(S.times); }
-// значение уровня в дробном индексе (лин. интерполяция)
+// интерполяция по полному массиву (тренд, динамика)
+function lvlS(x){
+  const H=S.h, i=Math.floor(x), f=x-i;
+  if(!H.length) return 0;
+  if(i<0) return H[0];
+  if(i>=H.length-1) return H[H.length-1];
+  return H[i]*(1-f)+H[i+1]*f;
+}
+// интерполяция по видимому окну (график)
 function lvl(x){
-  const i=Math.floor(x), f=x-i;
-  if(i<0) return S.h[0];
-  if(i>=S.h.length-1) return S.h[S.h.length-1];
-  return S.h[i]*(1-f)+S.h[i+1]*f;
+  const H=V.h, i=Math.floor(x), f=x-i;
+  if(!H.length) return 0;
+  if(i<0) return H[0];
+  if(i>=H.length-1) return H[H.length-1];
+  return H[i]*(1-f)+H[i+1]*f;
 }
 const fmt=t=>t.slice(11,16);
 const fmtDay=t=>{
@@ -303,8 +363,7 @@ async function loadData(){
       const m=fitHarmonics(times,h);
       if(m){m.fitAt=Date.now();localStorage.setItem('tideModel',JSON.stringify(m));}
     }catch(e){}
-    const w=sliceWindow(times,h)||{times,h};
-    S={times:w.times,h:w.h,fetchedAt:Date.now()};
+    S={times,h,fetchedAt:Date.now()};
     try{localStorage.setItem('tides',JSON.stringify(S));}catch(e){}
     render();
     setStatus('Обновлено: '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}));
@@ -333,9 +392,9 @@ function setStatus(m){document.getElementById('status').textContent=m;}
 
 /* ---- экстремумы (приливы/отливы) ---- */
 function extremes(){
-  const out=[];
-  for(let i=1;i<S.h.length-1;i++){
-    const a=S.h[i-1],b=S.h[i],c=S.h[i+1];
+  const H=V.h, T=V.times, out=[];
+  for(let i=1;i<H.length-1;i++){
+    const a=H[i-1],b=H[i],c=H[i+1];
     if((b>=a&&b>c)||(b>a&&b>=c)||(b<=a&&b<c)||(b<a&&b<=c)){
       const high=b>a;
       // уточнение вершины параболой
@@ -343,7 +402,7 @@ function extremes(){
       let off=0,val=b;
       if(Math.abs(den)>1e-9){off=.5*(a-c)/den;off=Math.max(-1,Math.min(1,off));val=b-.25*(a-c)*off;}
       const idx=i+off;
-      const base=S.times[Math.floor(idx)], mins=Math.round((idx-Math.floor(idx))*60);
+      const base=T[Math.floor(idx)], mins=Math.round((idx-Math.floor(idx))*60);
       const hh=String((+base.slice(11,13)+Math.floor(mins/60))%24).padStart(2,'0');
       const mm=String(mins%60).padStart(2,'0');
       out.push({idx,high,val,time:base.slice(0,11)+hh+':'+mm});
@@ -354,23 +413,30 @@ function extremes(){
 
 /* ---- отрисовка ---- */
 function render(){
-  const ni=nowIndex();
-  if(ni<0){showErr('Данные устарели, обновите');return;}
-  const cur=lvl(ni);
-  const min=Math.min(...S.h), max=Math.max(...S.h);
+  const niFull=nowIndex();
+  if(niFull<0){showErr('Данные устарели, обновите');return;}
+  const cur=lvlS(niFull);
+
+  // ── видимое окно по выбранному периоду ──
+  const R=RANGES[RANGE]||RANGES['3д'];
+  const a=Math.max(0,Math.floor(niFull-R.p));
+  const b=Math.min(S.h.length,Math.ceil(niFull+R.f)+1);
+  V={times:S.times.slice(a,b),h:S.h.slice(a,b)};
+  const ni=niFull-a;                       // "сейчас" в координатах окна
+  const min=Math.min(...V.h), max=Math.max(...V.h);
 
   // текущий уровень
   document.getElementById('level-now').innerHTML=cur.toFixed(2)+' <span class="unit">м</span>';
 
   // аквариум
   const pct=8+84*(cur-min)/(max-min||1);
-  document.getElementById('water').style.height=pct.toFixed(1)+'%';
+  document.getElementById('water').style.height=Math.max(4,Math.min(96,pct)).toFixed(1)+'%';
   document.getElementById('sc-max').textContent=max.toFixed(1);
   document.getElementById('sc-mid').textContent=((max+min)/2).toFixed(1);
   document.getElementById('sc-min').textContent=min.toFixed(1);
 
   // тренд и скорость (см/ч), производная по ±30 мин
-  const rate=(lvl(ni+.5)-lvl(ni-.5))*100;
+  const rate=(lvlS(niFull+.5)-lvlS(niFull-.5))*100;
   const tr=document.getElementById('trend'), tt=document.getElementById('trend-txt');
   const ar=tr.querySelector('.arrow');
   if(rate>1){ar.textContent='▲';tr.className='rising';tt.textContent='Вода прибывает';}
@@ -380,7 +446,7 @@ function render(){
 
   // динамика за 1/3/6 ч
   [[1,'d1'],[3,'d3'],[6,'d6']].forEach(([hrs,id])=>{
-    const d=(cur-lvl(ni-hrs))*100;
+    const d=(cur-lvlS(niFull-hrs))*100;
     const el=document.getElementById(id);
     el.textContent=(d>0?'+':'')+d.toFixed(0)+' см';
     el.className='v '+(d>=0?'pos':'neg');
@@ -398,6 +464,8 @@ function render(){
       <div><div class="h">${e.val.toFixed(2)} м</div><div class="cd">${cd}</div></div></div>`;
   }).join('');
 
+  renderAstro();
+  document.getElementById('chart-title').textContent='Уровень воды · '+(RANGE_LABEL[RANGE]||'');
   drawChart(ni,min,max);
 }
 
@@ -409,17 +477,25 @@ function drawChart(ni,min,max){
   cv.width=W*dpr;cv.height=H*dpr;
   const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
   const padL=6,padR=6,padT=16,padB=22;
-  const n=S.h.length;
+  const T=V.times, D=V.h, n=D.length;
   const X=i=>padL+(W-padL-padR)*i/(n-1);
   const Y=v=>padT+(H-padT-padB)*(1-(v-min)/(max-min||1));
+
+  // ── ночная заливка (между закатом и восходом) ──
+  ctx.fillStyle='rgba(15,7,30,.5)';
+  for(let i=0;i<n-1;i++){
+    const s=sunDec(T[i].slice(0,10));
+    const mid=(+T[i].slice(11,13))+(+T[i].slice(14,16))/60+0.5;
+    if(mid<s.rise || mid>=s.set) ctx.fillRect(X(i),padT,X(i+1)-X(i)+0.6,H-padT-padB);
+  }
 
   // заливка под кривой
   const grad=ctx.createLinearGradient(0,padT,0,H-padB);
   grad.addColorStop(0,'rgba(64,224,208,.30)');
   grad.addColorStop(.55,'rgba(124,58,237,.22)');
   grad.addColorStop(1,'rgba(255,110,199,.10)');
-  ctx.beginPath();ctx.moveTo(X(0),Y(S.h[0]));
-  for(let i=1;i<n;i++)ctx.lineTo(X(i),Y(S.h[i]));
+  ctx.beginPath();ctx.moveTo(X(0),Y(D[0]));
+  for(let i=1;i<n;i++)ctx.lineTo(X(i),Y(D[i]));
   ctx.lineTo(X(n-1),H-padB);ctx.lineTo(X(0),H-padB);ctx.closePath();
   ctx.fillStyle=grad;ctx.fill();
 
@@ -427,7 +503,7 @@ function drawChart(ni,min,max){
   const seg=(from,to,style,w)=>{
     ctx.beginPath();
     ctx.moveTo(X(from),Y(lvl(from)));
-    for(let i=Math.ceil(from);i<=to;i++)ctx.lineTo(X(i),Y(S.h[i]));
+    for(let i=Math.ceil(from);i<=to;i++)ctx.lineTo(X(i),Y(D[i]));
     if(to%1)ctx.lineTo(X(to),Y(lvl(to)));
     ctx.strokeStyle=style;ctx.lineWidth=w;ctx.lineCap='round';ctx.stroke();
   };
@@ -436,13 +512,15 @@ function drawChart(ni,min,max){
   gl.addColorStop(0,'#40e0d0');gl.addColorStop(1,'#ff6ec7');
   seg(ni,n-1,gl,2.5);
 
-  // полуночные метки дней
+  // полуночные метки дней + значок фазы луны
   ctx.fillStyle='rgba(185,165,232,.75)';ctx.font='9.5px sans-serif';ctx.textAlign='center';
   for(let i=0;i<n;i++){
-    if(S.times[i].slice(11,16)==='00:00'){
+    if(T[i].slice(11,16)==='00:00'){
       ctx.strokeStyle='rgba(167,139,250,.18)';ctx.lineWidth=1;
       ctx.beginPath();ctx.moveTo(X(i),padT);ctx.lineTo(X(i),H-padB);ctx.stroke();
-      ctx.fillText(fmtDay(S.times[i]),X(i),H-8);
+      ctx.fillStyle='rgba(185,165,232,.75)';ctx.fillText(fmtDay(T[i]),X(i),H-8);
+      ctx.font='11px sans-serif';ctx.fillText(moonAt(T[i].slice(0,10)).emo,X(i),padT+2);
+      ctx.font='9.5px sans-serif';
     }
   }
 
@@ -469,7 +547,7 @@ function drawChart(ni,min,max){
     ctx.strokeStyle='rgba(64,224,208,.8)';ctx.lineWidth=1;
     ctx.beginPath();ctx.moveTo(sx,padT);ctx.lineTo(sx,H-padB);ctx.stroke();
     ctx.beginPath();ctx.arc(sx,Y(sv),4,0,7);ctx.fillStyle='#22e6e6';ctx.fill();
-    const t=S.times[Math.round(xi)];
+    const t=V.times[Math.round(xi)];
     const txt=sv.toFixed(2)+' м · '+fmt(t)+' '+fmtDay(t);
     ctx.font='bold 10.5px sans-serif';
     const tw=ctx.measureText(txt).width+12;
@@ -489,6 +567,91 @@ function drawChart(ni,min,max){
   cv.addEventListener('touchend',()=>{scrubX=null;render();});
   cv.addEventListener('mousemove',upd);
   cv.addEventListener('mouseleave',()=>{scrubX=null;render();});
+})();
+
+/* ---- Луна ---- */
+const SYN=29.530588853;                 // синодический месяц, суток
+function moonInfo(dateMs){
+  const ref=Date.UTC(2000,0,6,18,14,0); // известное новолуние 06.01.2000
+  const age=(((dateMs-ref)/86400000)%SYN+SYN)%SYN;
+  const illum=Math.round((1-Math.cos(2*Math.PI*age/SYN))/2*100);
+  const P=[[1.85,'Новолуние','🌑'],[5.54,'Растущий серп','🌒'],[9.23,'Первая четверть','🌓'],
+    [12.92,'Растущая луна','🌔'],[16.61,'Полнолуние','🌕'],[20.30,'Убывающая луна','🌖'],
+    [23.99,'Последняя четверть','🌗'],[27.68,'Убывающий серп','🌘'],[99,'Новолуние','🌑']];
+  let name='',emo=''; for(const p of P){ if(age<p[0]){name=p[1];emo=p[2];break;} }
+  const dNew=Math.min(age,SYN-age), dFull=Math.abs(age-SYN/2);
+  return {age,illum,name,emo,
+    nearFull:dFull<dNew, spring:Math.min(dNew,dFull)<3.7,
+    nextFull:age<SYN/2?(SYN/2-age):(SYN*1.5-age), nextNew:SYN-age};
+}
+const _moonC={};
+function moonAt(dateStr){                // фаза на полдень указанной даты (для графика)
+  if(!_moonC[dateStr]){const [y,m,d]=dateStr.split('-').map(Number);_moonC[dateStr]=moonInfo(Date.UTC(y,m-1,d,12));}
+  return _moonC[dateStr];
+}
+
+/* ---- Солнце (SunCalc: только восход/закат) ---- */
+const _R=Math.PI/180,_DM=86400000,_J70=2440588,_J2K=2451545,_EPS=_R*23.4397;
+function _sunEvents(ms,lat,lng){
+  const lw=_R*-lng, phi=_R*lat, d=ms/_DM-0.5+_J70-_J2K,
+    n=Math.round(d-0.0009-lw/(2*Math.PI)),
+    ds=0.0009+lw/(2*Math.PI)+n,
+    M=_R*(357.5291+0.98560028*ds),
+    L=M+_R*(1.9148*Math.sin(M)+0.02*Math.sin(2*M)+0.0003*Math.sin(3*M))+_R*102.9372+Math.PI,
+    dec=Math.asin(Math.sin(_EPS)*Math.sin(L)),
+    Jn=_J2K+ds+0.0053*Math.sin(M)-0.0069*Math.sin(2*L),
+    x=(Math.sin(-0.833*_R)-Math.sin(phi)*Math.sin(dec))/(Math.cos(phi)*Math.cos(dec)),
+    w=Math.acos(Math.max(-1,Math.min(1,x))),
+    Jset=_J2K+(0.0009+(w+lw)/(2*Math.PI)+n)+0.0053*Math.sin(M)-0.0069*Math.sin(2*L),
+    Jrise=Jn-(Jset-Jn);
+  return {sunrise:(Jrise+0.5-_J70)*_DM, sunset:(Jset+0.5-_J70)*_DM};
+}
+function _localHM(ms){
+  const p=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(ms));
+  const g=t=>+p.find(x=>x.type===t).value, hh=g('hour'), mm=g('minute');
+  return {dec:hh+mm/60, str:String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0')};
+}
+const _sunC={};
+function sunDec(dateStr){                // {rise,set,riseStr,setStr} местное время Бильбао
+  if(!_sunC[dateStr]){
+    const [y,m,d]=dateStr.split('-').map(Number);
+    const s=_sunEvents(Date.UTC(y,m-1,d,12),LAT,LON);
+    const r=_localHM(s.sunrise), st=_localHM(s.sunset);
+    _sunC[dateStr]={rise:r.dec,set:st.dec,riseStr:r.str,setStr:st.str};
+  }
+  return _sunC[dateStr];
+}
+
+function renderAstro(){
+  const m=moonInfo(Date.now());
+  document.getElementById('moon-emoji').textContent=m.emo;
+  document.getElementById('moon-phase').textContent=m.name;
+  document.getElementById('moon-illum').textContent='Освещённость '+m.illum+'% · возраст '+m.age.toFixed(1)+' сут';
+  document.getElementById('moon-cycle').textContent='До полнолуния '+Math.round(m.nextFull)+' сут · до новолуния '+Math.round(m.nextNew)+' сут';
+  const tm=document.getElementById('tide-mode');
+  if(m.spring){tm.className='tide-mode';
+    tm.textContent='🌊 Сизигийные приливы: у '+(m.nearFull?'полнолуния':'новолуния')+' Солнце и Луна тянут вместе — приливы сейчас самые сильные.';
+  }else{tm.className='tide-mode neap';
+    tm.textContent='🌓 Квадратурные приливы: Луна в четверти, притяжение Солнца гасит лунное — приливы слабее обычного.';
+  }
+  const s=sunDec(bilbaoNow().str.slice(0,10));
+  document.getElementById('sunrise').textContent=s.riseStr;
+  document.getElementById('sunset').textContent=s.setStr;
+}
+
+/* ---- переключатель периода ---- */
+(()=>{
+  const box=document.getElementById('range');
+  try{const r=localStorage.getItem('tideRange'); if(r&&RANGES[r])RANGE=r;}catch(e){}
+  box.querySelectorAll('button').forEach(b=>{
+    b.classList.toggle('act',b.dataset.r===RANGE);
+    b.addEventListener('click',()=>{
+      RANGE=b.dataset.r; scrubX=null;
+      box.querySelectorAll('button').forEach(x=>x.classList.toggle('act',x===b));
+      try{localStorage.setItem('tideRange',RANGE);}catch(e){}
+      if(S.h.length)render();
+    });
+  });
 })();
 
 /* ---- часы и таймеры ---- */
