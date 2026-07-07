@@ -1,5 +1,5 @@
 // Service worker: кэш оболочки приложения, данные всегда из сети
-const CACHE = 'olabeaga-v1';
+const CACHE = 'olabeaga-v2';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 
 self.addEventListener('install', e => {
