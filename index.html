@@ -34,7 +34,11 @@
      background:linear-gradient(90deg,var(--teal-bright),var(--pink));
      -webkit-background-clip:text;background-clip:text;color:transparent}
   .sub{font-size:11px;color:var(--muted);letter-spacing:.4px}
+  .head-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
   #clock{font-size:13px;color:var(--pink-soft);font-variant-numeric:tabular-nums}
+  .lang-btn{background:rgba(22,10,40,.45);border:1px solid rgba(167,139,250,.35);color:var(--purple);
+     padding:3px 11px;border-radius:11px;font-size:11px;font-weight:700;letter-spacing:.5px;cursor:pointer}
+  .lang-btn:active{transform:scale(.94)}
 
   .card{background:var(--card);border:1px solid var(--card-border);
         border-radius:22px;padding:16px;margin-bottom:14px;
@@ -134,13 +138,16 @@
 
 <header>
   <div>
-    <h1>Риа Олабеага</h1>
-    <div class="sub">Бильбао · уровень воды и приливы</div>
+    <h1 data-i18n="h1">Риа Олабеага</h1>
+    <div class="sub" data-i18n="sub">Бильбао · уровень воды и приливы</div>
   </div>
-  <div id="clock">--:--</div>
+  <div class="head-right">
+    <div id="clock">--:--</div>
+    <button id="lang-btn" class="lang-btn" type="button">EN</button>
+  </div>
 </header>
 
-<div id="err"><span id="err-msg"></span><br><button onclick="loadData()">Повторить</button></div>
+<div id="err"><span id="err-msg"></span><br><button onclick="loadData()" data-i18n="retry">Повторить</button></div>
 
 <!-- Текущий уровень -->
 <div class="card">
@@ -161,9 +168,9 @@
       <div class="tank-scale"><span id="sc-max">·</span><span id="sc-mid">·</span><span id="sc-min">·</span></div>
     </div>
     <div class="now-block">
-      <div class="label">Сейчас</div>
-      <div id="level-now">–.– <span class="unit">м</span></div>
-      <div id="trend"><span class="arrow">·</span><span id="trend-txt">загрузка…</span></div>
+      <div class="label" data-i18n="now">Сейчас</div>
+      <div id="level-now">–.– <span class="unit" data-i18n="unit_m">м</span></div>
+      <div id="trend"><span class="arrow">·</span><span id="trend-txt" data-i18n="loading">загрузка…</span></div>
       <div id="rate"></div>
     </div>
   </div>
@@ -171,17 +178,17 @@
 
 <!-- Динамика -->
 <div class="card">
-  <div class="label">Динамика уровня</div>
+  <div class="label" data-i18n="dyn_title">Динамика уровня</div>
   <div class="dyn-grid">
-    <div class="dyn"><div class="v" id="d1">–</div><div class="t">за 1 час</div></div>
-    <div class="dyn"><div class="v" id="d3">–</div><div class="t">за 3 часа</div></div>
-    <div class="dyn"><div class="v" id="d6">–</div><div class="t">за 6 часов</div></div>
+    <div class="dyn"><div class="v" id="d1">–</div><div class="t" data-i18n="d1">за 1 час</div></div>
+    <div class="dyn"><div class="v" id="d3">–</div><div class="t" data-i18n="d3">за 3 часа</div></div>
+    <div class="dyn"><div class="v" id="d6">–</div><div class="t" data-i18n="d6">за 6 часов</div></div>
   </div>
 </div>
 
 <!-- Луна и Солнце -->
 <div class="card">
-  <div class="label">Луна и солнце</div>
+  <div class="label" data-i18n="astro_title">Луна и солнце</div>
   <div class="astro">
     <div class="moon-emoji" id="moon-emoji">🌙</div>
     <div class="info">
@@ -192,44 +199,139 @@
   </div>
   <div class="tide-mode" id="tide-mode"></div>
   <div class="sun-row">
-    <div class="sun"><span style="font-size:20px">🌅</span><div><div id="sunrise">—</div><div class="t2">восход</div></div></div>
-    <div class="sun"><span style="font-size:20px">🌇</span><div><div id="sunset">—</div><div class="t2">закат</div></div></div>
+    <div class="sun"><span style="font-size:20px">🌅</span><div><div id="sunrise">—</div><div class="t2" data-i18n="sunrise">восход</div></div></div>
+    <div class="sun"><span style="font-size:20px">🌇</span><div><div id="sunset">—</div><div class="t2" data-i18n="sunset">закат</div></div></div>
   </div>
 </div>
 
 <!-- График -->
 <div class="card">
-  <div class="label" id="chart-title">Уровень воды</div>
+  <div class="label" id="chart-title" data-i18n="chart_water">Уровень воды</div>
   <div class="range" id="range">
-    <button data-r="24ч">24 ч</button>
-    <button data-r="3д">3 дня</button>
-    <button data-r="5д">5 дней</button>
-    <button data-r="7д">7 дней</button>
+    <button data-r="24ч" data-i18n="r24">24 ч</button>
+    <button data-r="3д" data-i18n="r3">3 дня</button>
+    <button data-r="5д" data-i18n="r5">5 дней</button>
+    <button data-r="7д" data-i18n="r7">7 дней</button>
   </div>
   <canvas id="chart"></canvas>
   <div class="legend">
-    <span class="lg-past">прошедшее</span><span class="lg-fut">прогноз</span><span class="lg-now">сейчас</span><span class="lg-night">ночь</span>
+    <span class="lg-past" data-i18n="lg_past">прошедшее</span><span class="lg-fut" data-i18n="lg_fut">прогноз</span><span class="lg-now" data-i18n="lg_now">сейчас</span><span class="lg-night" data-i18n="lg_night">ночь</span>
   </div>
 </div>
 
 <!-- Ближайшие события -->
 <div class="card">
-  <div class="label">Приливы и отливы</div>
+  <div class="label" data-i18n="tides_title">Приливы и отливы</div>
   <div class="events" id="events"></div>
 </div>
 
 <div id="status"></div>
-<div class="note">Данные: Open-Meteo Marine API (модель ~8 км, уровень относительно среднего уровня моря).<br>Время — местное (Бильбао). Обновление каждые 30 минут.</div>
+<div class="note" data-i18n-html="note">Данные: Open-Meteo Marine API (модель ~8 км, уровень относительно среднего уровня моря).<br>Время — местное (Бильбао). Обновление каждые 30 минут.</div>
 
 <script>
 'use strict';
+
+/* ===== интернационализация (RU/EN) ===== */
+const LOCALE={ru:'ru-RU',en:'en-GB'};
+const MOON_NAMES={
+  ru:['Новолуние','Растущий серп','Первая четверть','Растущая луна','Полнолуние','Убывающая луна','Последняя четверть','Убывающий серп','Новолуние'],
+  en:['New Moon','Waxing Crescent','First Quarter','Waxing Gibbous','Full Moon','Waning Gibbous','Last Quarter','Waning Crescent','New Moon']
+};
+const I18N={
+  ru:{
+    title:'Олабеага · Приливы',
+    h1:'Риа Олабеага',
+    sub:'Бильбао · уровень воды и приливы',
+    retry:'Повторить',
+    now:'Сейчас',
+    unit_m:'м',
+    loading:'загрузка…',
+    dyn_title:'Динамика уровня',
+    d1:'за 1 час', d3:'за 3 часа', d6:'за 6 часов',
+    astro_title:'Луна и солнце',
+    sunrise:'восход', sunset:'закат',
+    chart_water:'Уровень воды',
+    r24:'24 ч', r3:'3 дня', r5:'5 дней', r7:'7 дней',
+    lg_past:'прошедшее', lg_fut:'прогноз', lg_now:'сейчас', lg_night:'ночь',
+    tides_title:'Приливы и отливы',
+    note:'Данные: Open-Meteo Marine API (модель ~8 км, уровень относительно среднего уровня моря).<br>Время — местное (Бильбао). Обновление каждые 30 минут.',
+    range_label:{'24ч':'сутки','3д':'3 дня','5д':'5 дней','7д':'7 дней'},
+    today:'сегодня', tomorrow:'завтра',
+    status_loading:'Загрузка данных…',
+    updated:'Обновлено: ',
+    water_rising:'Вода прибывает', water_falling:'Вода уходит', tide_turn:'Разворот прилива',
+    speed:'Скорость: ', speed_unit:' см/час',
+    cm:' см',
+    high_tide:'Полная вода (прилив)', low_tide:'Малая вода (отлив)',
+    in_prefix:'через ', min_suffix:' мин', hr_suffix:' ч ',
+    illum:'Освещённость ', age:'% · возраст ', age_unit:' сут',
+    to_full:'До полнолуния ', to_new:' сут · до новолуния ', days:' сут',
+    full_moon_gen:'полнолуния', new_moon_gen:'новолуния',
+    spring_a:'🌊 Сизигийные приливы: у ', spring_b:' Солнце и Луна тянут вместе — приливы сейчас самые сильные.',
+    neap:'🌓 Квадратурные приливы: Луна в четверти, притяжение Солнца гасит лунное — приливы слабее обычного.',
+    offline_cached:'Нет сети — данные от ',
+    offline_model_a:'Нет сети — офлайн-расчёт прилива по гармонической модели (точность ±', offline_model_b:' см)',
+    load_fail_a:'Не удалось загрузить (', load_fail_b:'). Если файл открыт во встроенном предпросмотре — он блокирует интернет: откройте файл в обычном браузере (Chrome), там всё заработает.',
+    no_level:'нет данных об уровне',
+    data_stale:'Данные устарели, обновите'
+  },
+  en:{
+    title:'Olabeaga · Tides',
+    h1:'Ría Olabeaga',
+    sub:'Bilbao · water level and tides',
+    retry:'Retry',
+    now:'Now',
+    unit_m:'m',
+    loading:'loading…',
+    dyn_title:'Level dynamics',
+    d1:'over 1 hour', d3:'over 3 hours', d6:'over 6 hours',
+    astro_title:'Moon and sun',
+    sunrise:'sunrise', sunset:'sunset',
+    chart_water:'Water level',
+    r24:'24 h', r3:'3 days', r5:'5 days', r7:'7 days',
+    lg_past:'past', lg_fut:'forecast', lg_now:'now', lg_night:'night',
+    tides_title:'High and low tides',
+    note:'Data: Open-Meteo Marine API (~8 km model, level relative to mean sea level).<br>Times are local (Bilbao). Updated every 30 minutes.',
+    range_label:{'24ч':'24 hours','3д':'3 days','5д':'5 days','7д':'7 days'},
+    today:'today', tomorrow:'tomorrow',
+    status_loading:'Loading data…',
+    updated:'Updated: ',
+    water_rising:'Water is rising', water_falling:'Water is falling', tide_turn:'Tide is turning',
+    speed:'Speed: ', speed_unit:' cm/h',
+    cm:' cm',
+    high_tide:'High water (flood)', low_tide:'Low water (ebb)',
+    in_prefix:'in ', min_suffix:' min', hr_suffix:' h ',
+    illum:'Illumination ', age:'% · age ', age_unit:' d',
+    to_full:'To full moon ', to_new:' d · to new moon ', days:' d',
+    full_moon_gen:'full moon', new_moon_gen:'new moon',
+    spring_a:'🌊 Spring tides: near the ', spring_b:', the Sun and Moon pull together — tides are at their strongest right now.',
+    neap:'🌓 Neap tides: the Moon is at quarter and the Sun\'s pull offsets the Moon\'s — tides are weaker than usual.',
+    offline_cached:'Offline — data from ',
+    offline_model_a:'Offline — harmonic-model tide estimate (accuracy ±', offline_model_b:' cm)',
+    load_fail_a:'Failed to load (', load_fail_b:'). If the file is open in a built-in preview it blocks internet access: open the file in a normal browser (Chrome) and it will work.',
+    no_level:'no level data',
+    data_stale:'Data is out of date, please refresh'
+  }
+};
+let LANG='ru';
+try{const l=localStorage.getItem('lang'); if(l==='ru'||l==='en')LANG=l;}catch(e){}
+function t(k){const d=I18N[LANG]||I18N.ru; return d[k]!==undefined?d[k]:k;}
+const rangeLabel=r=>(t('range_label')||{})[r]||'';
+function applyI18n(){
+  document.documentElement.lang=LANG;
+  document.title=t('title');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n);});
+  document.querySelectorAll('[data-i18n-html]').forEach(el=>{el.innerHTML=t(el.dataset.i18nHtml);});
+  const lb=document.getElementById('lang-btn'); if(lb) lb.textContent = LANG==='ru'?'EN':'RU';
+  if(S.h.length) render();
+}
+
 const LAT=43.271, LON=-2.962, TZ='Europe/Madrid';
 const API=`https://marine-api.open-meteo.com/v1/marine?latitude=${LAT}&longitude=${LON}&hourly=sea_level_height_msl&timezone=${encodeURIComponent(TZ)}&past_days=7&forecast_days=7`;
 let S={times:[],h:[],fetchedAt:0};   // полный массив данных
 let V={times:[],h:[]};               // видимое окно (по выбранному периоду)
 let RANGE='3д';
 const RANGES={'24ч':{p:6,f:18},'3д':{p:18,f:54},'5д':{p:24,f:96},'7д':{p:24,f:144}};
-const RANGE_LABEL={'24ч':'сутки','3д':'3 дня','5д':'5 дней','7д':'7 дней'};
 
 /* ---- гармоническая модель (офлайн-фолбэк) ----
    после удачной загрузки приложение само подгоняет
@@ -331,13 +433,13 @@ function lvl(x){
   if(i>=H.length-1) return H[H.length-1];
   return H[i]*(1-f)+H[i+1]*f;
 }
-const fmt=t=>t.slice(11,16);
-const fmtDay=t=>{
-  const n=bilbaoNow().str.slice(0,10), d=t.slice(0,10);
-  if(d===n) return 'сегодня';
+const fmt=ts=>ts.slice(11,16);
+const fmtDay=ts=>{
+  const n=bilbaoNow().str.slice(0,10), d=ts.slice(0,10);
+  if(d===n) return t('today');
   const dt=new Date(d+'T12:00:00'), nd=new Date(n+'T12:00:00');
-  return Math.round((dt-nd)/864e5)===1 ? 'завтра'
-    : dt.toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
+  return Math.round((dt-nd)/864e5)===1 ? t('tomorrow')
+    : dt.toLocaleDateString(LOCALE[LANG],{day:'numeric',month:'short'});
 };
 
 /* ---- загрузка ---- */
@@ -350,13 +452,13 @@ function sliceWindow(times,h){ // окно показа: -24ч … +48ч от "�
 }
 async function loadData(){
   document.getElementById('err').style.display='none';
-  setStatus('Загрузка данных…');
+  setStatus(t('status_loading'));
   try{
     const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),15000);
     const r=await fetch(API,{cache:'no-store',signal:ctrl.signal});
     if(!r.ok) throw new Error('HTTP '+r.status);
     const j=await r.json();
-    if(!j.hourly||!j.hourly.sea_level_height_msl) throw new Error('нет данных об уровне');
+    if(!j.hourly||!j.hourly.sea_level_height_msl) throw new Error(t('no_level'));
     const times=j.hourly.time, h=j.hourly.sea_level_height_msl.map(Number);
     // калибруем офлайн-модель по 14 суткам данных
     try{
@@ -366,13 +468,13 @@ async function loadData(){
     S={times,h,fetchedAt:Date.now()};
     try{localStorage.setItem('tides',JSON.stringify(S));}catch(e){}
     render();
-    setStatus('Обновлено: '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}));
+    setStatus(t('updated')+new Date().toLocaleTimeString(LOCALE[LANG],{hour:'2-digit',minute:'2-digit'}));
   }catch(e){
     // 1) свежий кэш сырых данных
     let c=null; try{c=JSON.parse(localStorage.getItem('tides'));}catch(_){}
     if(c && Date.now()-c.fetchedAt<36*3600e3 && nowIndexOf(c.times)>=0){
       S=c; render();
-      showErr('Нет сети — данные от '+new Date(S.fetchedAt).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}));
+      showErr(t('offline_cached')+new Date(S.fetchedAt).toLocaleString(LOCALE[LANG],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}));
       return;
     }
     // 2) офлайн-расчёт по гармонической модели
@@ -381,10 +483,10 @@ async function loadData(){
       const syn=syntheticFromModel(m);
       S={times:syn.times,h:syn.h,fetchedAt:m.fitAt||Date.now()};
       render();
-      showErr('Нет сети — офлайн-расчёт прилива по гармонической модели (точность ±'+Math.round(m.rms*100)+' см)');
+      showErr(t('offline_model_a')+Math.round(m.rms*100)+t('offline_model_b'));
       return;
     }
-    showErr('Не удалось загрузить ('+e.message+'). Если файл открыт во встроенном предпросмотре — он блокирует интернет: откройте файл в обычном браузере (Chrome), там всё заработает.');
+    showErr(t('load_fail_a')+e.message+t('load_fail_b'));
   }
 }
 function showErr(m){document.getElementById('err-msg').textContent=m;document.getElementById('err').style.display='block';}
@@ -414,7 +516,7 @@ function extremes(){
 /* ---- отрисовка ---- */
 function render(){
   const niFull=nowIndex();
-  if(niFull<0){showErr('Данные устарели, обновите');return;}
+  if(niFull<0){showErr(t('data_stale'));return;}
   const cur=lvlS(niFull);
 
   // ── видимое окно по выбранному периоду ──
@@ -426,7 +528,7 @@ function render(){
   const min=Math.min(...V.h), max=Math.max(...V.h);
 
   // текущий уровень
-  document.getElementById('level-now').innerHTML=cur.toFixed(2)+' <span class="unit">м</span>';
+  document.getElementById('level-now').innerHTML=cur.toFixed(2)+' <span class="unit">'+t('unit_m')+'</span>';
 
   // аквариум
   const pct=8+84*(cur-min)/(max-min||1);
@@ -439,16 +541,16 @@ function render(){
   const rate=(lvlS(niFull+.5)-lvlS(niFull-.5))*100;
   const tr=document.getElementById('trend'), tt=document.getElementById('trend-txt');
   const ar=tr.querySelector('.arrow');
-  if(rate>1){ar.textContent='▲';tr.className='rising';tt.textContent='Вода прибывает';}
-  else if(rate<-1){ar.textContent='▼';tr.className='falling';tt.textContent='Вода уходит';}
-  else{ar.textContent='◆';tr.className='';tt.textContent='Разворот прилива';}
-  document.getElementById('rate').textContent='Скорость: '+(rate>0?'+':'')+rate.toFixed(0)+' см/час';
+  if(rate>1){ar.textContent='▲';tr.className='rising';tt.textContent=t('water_rising');}
+  else if(rate<-1){ar.textContent='▼';tr.className='falling';tt.textContent=t('water_falling');}
+  else{ar.textContent='◆';tr.className='';tt.textContent=t('tide_turn');}
+  document.getElementById('rate').textContent=t('speed')+(rate>0?'+':'')+rate.toFixed(0)+t('speed_unit');
 
   // динамика за 1/3/6 ч
   [[1,'d1'],[3,'d3'],[6,'d6']].forEach(([hrs,id])=>{
     const d=(cur-lvlS(niFull-hrs))*100;
     const el=document.getElementById(id);
-    el.textContent=(d>0?'+':'')+d.toFixed(0)+' см';
+    el.textContent=(d>0?'+':'')+d.toFixed(0)+t('cm');
     el.className='v '+(d>=0?'pos':'neg');
   });
 
@@ -456,16 +558,16 @@ function render(){
   const evs=extremes().filter(e=>e.idx>=ni).slice(0,4);
   document.getElementById('events').innerHTML=evs.map(e=>{
     const dtMin=Math.round((e.idx-ni)*60);
-    const cd=dtMin<60?('через '+dtMin+' мин'):('через '+Math.floor(dtMin/60)+' ч '+(dtMin%60)+' мин');
+    const cd=dtMin<60?(t('in_prefix')+dtMin+t('min_suffix')):(t('in_prefix')+Math.floor(dtMin/60)+t('hr_suffix')+(dtMin%60)+t('min_suffix'));
     return `<div class="ev ${e.high?'high':'low'}">
       <div class="ico">${e.high?'↑':'↓'}</div>
-      <div class="info"><div class="kind">${e.high?'Полная вода (прилив)':'Малая вода (отлив)'}</div>
+      <div class="info"><div class="kind">${e.high?t('high_tide'):t('low_tide')}</div>
       <div class="when">${fmtDay(e.time)} · ${fmt(e.time)}</div></div>
-      <div><div class="h">${e.val.toFixed(2)} м</div><div class="cd">${cd}</div></div></div>`;
+      <div><div class="h">${e.val.toFixed(2)} ${t('unit_m')}</div><div class="cd">${cd}</div></div></div>`;
   }).join('');
 
   renderAstro();
-  document.getElementById('chart-title').textContent='Уровень воды · '+(RANGE_LABEL[RANGE]||'');
+  document.getElementById('chart-title').textContent=t('chart_water')+' · '+rangeLabel(RANGE);
   drawChart(ni,min,max);
 }
 
@@ -547,8 +649,8 @@ function drawChart(ni,min,max){
     ctx.strokeStyle='rgba(64,224,208,.8)';ctx.lineWidth=1;
     ctx.beginPath();ctx.moveTo(sx,padT);ctx.lineTo(sx,H-padB);ctx.stroke();
     ctx.beginPath();ctx.arc(sx,Y(sv),4,0,7);ctx.fillStyle='#22e6e6';ctx.fill();
-    const t=V.times[Math.round(xi)];
-    const txt=sv.toFixed(2)+' м · '+fmt(t)+' '+fmtDay(t);
+    const ts=V.times[Math.round(xi)];
+    const txt=sv.toFixed(2)+' '+t('unit_m')+' · '+fmt(ts)+' '+fmtDay(ts);
     ctx.font='bold 10.5px sans-serif';
     const tw=ctx.measureText(txt).width+12;
     let bx=Math.max(2,Math.min(W-tw-2,sx-tw/2));
@@ -575,12 +677,11 @@ function moonInfo(dateMs){
   const ref=Date.UTC(2000,0,6,18,14,0); // известное новолуние 06.01.2000
   const age=(((dateMs-ref)/86400000)%SYN+SYN)%SYN;
   const illum=Math.round((1-Math.cos(2*Math.PI*age/SYN))/2*100);
-  const P=[[1.85,'Новолуние','🌑'],[5.54,'Растущий серп','🌒'],[9.23,'Первая четверть','🌓'],
-    [12.92,'Растущая луна','🌔'],[16.61,'Полнолуние','🌕'],[20.30,'Убывающая луна','🌖'],
-    [23.99,'Последняя четверть','🌗'],[27.68,'Убывающий серп','🌘'],[99,'Новолуние','🌑']];
-  let name='',emo=''; for(const p of P){ if(age<p[0]){name=p[1];emo=p[2];break;} }
+  const P=[[1.85,'🌑'],[5.54,'🌒'],[9.23,'🌓'],[12.92,'🌔'],[16.61,'🌕'],
+    [20.30,'🌖'],[23.99,'🌗'],[27.68,'🌘'],[99,'🌑']];
+  let emo='',pi=0; for(let k=0;k<P.length;k++){ if(age<P[k][0]){emo=P[k][1];pi=k;break;} }
   const dNew=Math.min(age,SYN-age), dFull=Math.abs(age-SYN/2);
-  return {age,illum,name,emo,
+  return {age,illum,pi,emo,
     nearFull:dFull<dNew, spring:Math.min(dNew,dFull)<3.7,
     nextFull:age<SYN/2?(SYN/2-age):(SYN*1.5-age), nextNew:SYN-age};
 }
@@ -625,14 +726,14 @@ function sunDec(dateStr){                // {rise,set,riseStr,setStr} местн
 function renderAstro(){
   const m=moonInfo(Date.now());
   document.getElementById('moon-emoji').textContent=m.emo;
-  document.getElementById('moon-phase').textContent=m.name;
-  document.getElementById('moon-illum').textContent='Освещённость '+m.illum+'% · возраст '+m.age.toFixed(1)+' сут';
-  document.getElementById('moon-cycle').textContent='До полнолуния '+Math.round(m.nextFull)+' сут · до новолуния '+Math.round(m.nextNew)+' сут';
+  document.getElementById('moon-phase').textContent=MOON_NAMES[LANG][m.pi];
+  document.getElementById('moon-illum').textContent=t('illum')+m.illum+t('age')+m.age.toFixed(1)+t('age_unit');
+  document.getElementById('moon-cycle').textContent=t('to_full')+Math.round(m.nextFull)+t('to_new')+Math.round(m.nextNew)+t('days');
   const tm=document.getElementById('tide-mode');
   if(m.spring){tm.className='tide-mode';
-    tm.textContent='🌊 Сизигийные приливы: у '+(m.nearFull?'полнолуния':'новолуния')+' Солнце и Луна тянут вместе — приливы сейчас самые сильные.';
+    tm.textContent=t('spring_a')+(m.nearFull?t('full_moon_gen'):t('new_moon_gen'))+t('spring_b');
   }else{tm.className='tide-mode neap';
-    tm.textContent='🌓 Квадратурные приливы: Луна в четверти, притяжение Солнца гасит лунное — приливы слабее обычного.';
+    tm.textContent=t('neap');
   }
   const s=sunDec(bilbaoNow().str.slice(0,10));
   document.getElementById('sunrise').textContent=s.riseStr;
@@ -653,6 +754,14 @@ function renderAstro(){
     });
   });
 })();
+
+/* ---- переключатель языка ---- */
+document.getElementById('lang-btn').addEventListener('click',()=>{
+  LANG=LANG==='ru'?'en':'ru';
+  try{localStorage.setItem('lang',LANG);}catch(e){}
+  applyI18n();
+});
+applyI18n();
 
 /* ---- часы и таймеры ---- */
 function tick(){
