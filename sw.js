@@ -1,30 +1,34 @@
-// Service worker: кэш оболочки приложения, данные всегда из сети
-const CACHE = 'olabeaga-v2';
-const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
+const CACHE = 'zorrotza-aire-v1.0.6';
+const APP_SHELL = [
+  './', './index.html', './styles.css?v=1.0.6', './app.js?v=1.0.6', './manifest.webmanifest',
+  './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png'
+];
 
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
 });
 
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
-  );
+self.addEventListener('activate', event => {
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));
 });
 
-self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
-  // данные о приливах — только сеть (у приложения свой офлайн-фолбэк)
-  if (url.hostname.includes('open-meteo.com')) return;
-  // оболочка — кэш с фоновым обновлением
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      const fresh = fetch(e.request).then(resp => {
-        if (resp.ok) caches.open(CACHE).then(c => c.put(e.request, resp.clone()));
-        return resp;
-      }).catch(() => cached);
-      return cached || fresh;
-    })
-  );
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+  const url = new URL(event.request.url);
+  const isData = url.hostname.includes('euskadi.eus') || url.hostname.includes('api.euskadi');
+
+  if (isData) {
+    event.respondWith(fetch(event.request).then(response => {
+      const copy = response.clone();
+      caches.open(CACHE).then(cache => cache.put(event.request, copy));
+      return response;
+    }).catch(() => caches.match(event.request)));
+    return;
+  }
+
+  event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
+    const copy = response.clone();
+    caches.open(CACHE).then(cache => cache.put(event.request, copy));
+    return response;
+  }).catch(() => caches.match('./index.html'))));
 });
